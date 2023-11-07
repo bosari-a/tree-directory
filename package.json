@@ -12,7 +12,13 @@
     "lint": "npx eslint .",
     "doc": "npx typedoc src/**/*.ts --out docs/"
   },
-  "keywords": [],
+  "keywords": [
+    "readdir",
+    "unix",
+    "tree",
+    "tree-directory",
+    "unix paths"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {

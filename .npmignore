@@ -3,6 +3,6 @@ parent
 .gitignore
 .eslintignore
 .eslintrc.cjs
-rollupconfig.js
+rollup.config.js
 tsconfig.json
 src
