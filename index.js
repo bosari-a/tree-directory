@@ -33,6 +33,9 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
+/**
+ * Tree node class if option `recursive` is `true`
+ */
 class TreeNode {
     constructor(name, path, isFile, children) {
         this.name = name;
@@ -42,7 +45,9 @@ class TreeNode {
     }
 }
 /**
- *
+ * Reads directory `parent` (either recursively or not depending on options) and
+ * generates either a `string[]` of unix paths, {@link Dirent[]} array with unix paths
+ * property or, when recursive is true, returns a tree also with unix paths for each node.
  * @param parent
  * @param options
  * @returns
@@ -89,6 +94,11 @@ function unixreaddir(parent, options) {
                 });
             }
         });
+        /**
+         * Recursively generates tree
+         * @param node
+         * @returns
+         */
         function readdirtree(node) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (node.isFile || node.children === undefined) {

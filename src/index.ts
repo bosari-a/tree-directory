@@ -1,12 +1,17 @@
 import { Dirent, PathLike } from "fs";
 import { readdir, stat } from "fs/promises";
 import { normalize, basename, dirname, join } from "path/posix";
-
+/**
+ * Type similar to {@link readdir} options argument types.
+ */
 export type Readdiroptions = {
   encoding?: BufferEncoding | null | undefined;
   withFileTypes?: boolean | undefined;
   recursive?: boolean | undefined;
 };
+/**
+ * Tree node class if option `recursive` is `true`
+ */
 export class TreeNode {
   name: string;
   path: string;
@@ -25,7 +30,9 @@ export class TreeNode {
   }
 }
 /**
- *
+ * Reads directory `parent` (either recursively or not depending on options) and
+ * generates either a `string[]` of unix paths, {@link Dirent[]} array with unix paths
+ * property or, when recursive is true, returns a tree also with unix paths for each node.
  * @param parent
  * @param options
  * @returns
@@ -84,6 +91,11 @@ export async function unixreaddir(
         });
     }
   });
+  /**
+   * Recursively generates tree
+   * @param node
+   * @returns
+   */
   async function readdirtree(node: TreeNode) {
     if (node.isFile || node.children === undefined) {
       return;
