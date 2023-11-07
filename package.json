@@ -17,7 +17,8 @@
     "unix",
     "tree",
     "tree-directory",
-    "unix paths"
+    "unix paths",
+    "recursive"
   ],
   "author": "",
   "license": "ISC",
