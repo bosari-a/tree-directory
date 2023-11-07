@@ -1,3 +1,8 @@
 docs
 parent
 .gitignore
+.eslintignore
+.eslintrc.cjs
+rollupconfig.js
+tsconfig.json
+src
