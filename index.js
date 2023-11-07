@@ -1,5 +1,5 @@
 import { readdir, stat } from 'fs/promises';
-import { normalize, join, basename, dirname } from 'path/posix';
+import { normalize, basename, dirname, join } from 'path/posix';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -33,98 +33,84 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
-/**
- *
- * @param parent
- * @returns
- */
-function unixreaddir(parent) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
-            readdir(parent, { recursive: true })
-                .then((paths) => {
-                resolve(paths.map((path) => normalize(path.replace(/\\/g, "/"))));
-            })
-                .catch((err) => {
-                reject(err.message || err);
-            });
-        });
-    });
+class TreeNode {
+    constructor(name, path, isFile, children) {
+        this.name = name;
+        this.path = path;
+        this.isFile = isFile;
+        this.children = children;
+    }
 }
 /**
  *
  * @param parent
- * @param paths
+ * @param options
  * @returns
  */
-function dirdata(parent, paths) {
+function unixreaddir(parent, options) {
     return __awaiter(this, void 0, void 0, function* () {
+        const path = normalize(parent.toString().replace(/\\/g, "/"));
         return new Promise((resolve, reject) => {
-            const pathDataPromises = paths.map((path) => __awaiter(this, void 0, void 0, function* () {
-                return new Promise((resolve, reject) => {
-                    stat(join(parent, path))
+            if ((options === null || options === void 0 ? void 0 : options.withFileTypes) || (options === null || options === void 0 ? void 0 : options.recursive)) {
+                if (!options.recursive)
+                    readdir(path, {
+                        encoding: options.encoding,
+                        withFileTypes: true,
+                    })
+                        .then((values) => resolve(values.map((dirent) => {
+                        dirent.path = normalize(dirent.path.replace(/\\/g, "/"));
+                        return dirent;
+                    })))
+                        .catch((err) => {
+                        reject(err.message || err);
+                    });
+                else {
+                    stat(path)
                         .then((stats) => {
-                        resolve({
-                            basename: basename(path),
-                            dirname: dirname(path),
-                            isFile: stats.isFile(),
+                        const tree = new TreeNode(basename(path), dirname(path), stats.isFile(), stats.isFile() ? undefined : []);
+                        readdirtree(tree)
+                            .then(() => {
+                            resolve(tree);
+                        })
+                            .catch((err) => {
+                            reject(err.message);
                         });
                     })
                         .catch((err) => {
                         reject(err.message || err);
                     });
-                });
-            }));
-            Promise.all(pathDataPromises)
-                .then((values) => {
-                resolve(values);
-            })
-                .catch((err) => {
-                reject(err.message || err);
-            });
-        });
-    });
-}
-/**
- *
- * @param pathData
- * @param paths
- * @returns
- */
-function group(pathData, paths) {
-    return paths
-        .filter((path) => !path.includes("/"))
-        .map((parent) => {
-        const regexp = new RegExp(`^${parent}`);
-        const family = pathData.filter((data) => data.dirname.match(regexp) || parent === data.basename);
-        const files = family.filter((data) => data.isFile);
-        const dirs = family.filter((data) => !data.isFile);
-        return [dirs, files];
-    });
-}
-/**
- *
- * @param parent
- * @returns
- */
-function tree(parent) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
-            unixreaddir(parent)
-                .then((paths) => {
-                dirdata(parent, paths)
-                    .then((data) => {
-                    resolve(group(data, paths));
-                })
+                }
+            }
+            else if (!(options === null || options === void 0 ? void 0 : options.recursive) && !(options === null || options === void 0 ? void 0 : options.withFileTypes)) {
+                readdir(path, { encoding: options === null || options === void 0 ? void 0 : options.encoding })
+                    .then((paths) => resolve(paths.map((path) => normalize(path.replace(/\\/g, "/")))))
                     .catch((err) => {
                     reject(err.message || err);
                 });
-            })
-                .catch((err) => {
-                reject(err.message || err);
-            });
+            }
         });
+        function readdirtree(node) {
+            return __awaiter(this, void 0, void 0, function* () {
+                if (node.isFile || node.children === undefined) {
+                    return;
+                }
+                try {
+                    const children = (yield unixreaddir(join(node.path, node.name), {
+                        withFileTypes: true,
+                    }));
+                    for (let i = 0; i < children.length; i++) {
+                        const child = children[i];
+                        const childNode = new TreeNode(child.name, child.path, child.isFile(), child.isFile() ? undefined : []);
+                        node.children.push(childNode);
+                        yield readdirtree(childNode);
+                    }
+                }
+                catch (err) {
+                    throw Error(`Error: ${err}`);
+                }
+            });
+        }
     });
 }
 
-export { dirdata, group, tree, unixreaddir };
+export { TreeNode, unixreaddir };
