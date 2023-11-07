@@ -1,7 +1,7 @@
 {
   "name": "directoree",
   "type": "module",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "main": "index.js",
   "types": "index.d.ts",
