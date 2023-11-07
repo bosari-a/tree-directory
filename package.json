@@ -3,12 +3,14 @@
   "type": "module",
   "version": "1.0.0",
   "description": "",
-  "main": "index.cjs",
+  "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.cjs",
     "dev": "rollup -c --watch",
-    "lint": "npx eslint ."
+    "lint": "npx eslint .",
+    "doc": "npx typedoc src/**/*.ts --out docs/"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +22,7 @@
     "@typescript-eslint/parser": "^6.10.0",
     "eslint": "^8.53.0",
     "tslib": "^2.6.2",
+    "typedoc": "^0.25.3",
     "typescript": "^5.2.2"
   }
 }

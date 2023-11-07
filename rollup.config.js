@@ -4,8 +4,8 @@ import typescript from "@rollup/plugin-typescript";
 export default {
   input: "src/index.ts",
   output: {
-    file: "index.cjs",
-    format: "cjs",
+    file: "index.js",
+    format: "esm",
   },
   plugins: [typescript()],
   watch: true,
