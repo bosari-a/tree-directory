@@ -7,7 +7,7 @@
   "types": "index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.cjs",
+    "start": "node index.js",
     "dev": "rollup -c --watch",
     "lint": "npx eslint .",
     "doc": "npx typedoc src/**/*.ts --out docs/"

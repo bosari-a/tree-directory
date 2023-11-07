@@ -109,11 +109,19 @@ function group(pathData, paths) {
  */
 function tree(parent) {
     return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve) => {
-            unixreaddir(parent).then((paths) => {
-                dirdata(parent, paths).then((data) => {
+        return new Promise((resolve, reject) => {
+            unixreaddir(parent)
+                .then((paths) => {
+                dirdata(parent, paths)
+                    .then((data) => {
                     resolve(group(data, paths));
+                })
+                    .catch((err) => {
+                    reject(err.message || err);
                 });
+            })
+                .catch((err) => {
+                reject(err.message || err);
             });
         });
     });

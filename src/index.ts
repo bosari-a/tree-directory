@@ -81,11 +81,19 @@ export function group(pathData: IPathData[], paths: string[]): IPathData[][][] {
  * @returns
  */
 export async function tree(parent: string): Promise<IPathData[][][]> {
-  return new Promise((resolve) => {
-    unixreaddir(parent).then((paths) => {
-      dirdata(parent, paths).then((data) => {
-        resolve(group(data, paths));
+  return new Promise((resolve, reject) => {
+    unixreaddir(parent)
+      .then((paths) => {
+        dirdata(parent, paths)
+          .then((data) => {
+            resolve(group(data, paths));
+          })
+          .catch((err) => {
+            reject(err.message || err);
+          });
+      })
+      .catch((err) => {
+        reject(err.message || err);
       });
-    });
   });
 }
