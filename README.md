@@ -1,76 +1,27 @@
-# Tree-directory
+# Tree directory
+
+## Installation:
 
 `npm install directoree`
 
-```bash
-$ node -v
-v20.5.1
-```
+### unixreaddir
 
-## Usage
+This function (the only one exported) in the package is meant to replace common general usecases for node's native `fs/promises` `readdir` module.
 
-Consider the following directory tree:
+## The name
 
-```bash
-parent/
-├── sibling0
-│   ├── file1.txt
-│   └── subdir
-│       ├── file1.txt
-│       └── file2.txt
-├── sibling1
-│   ├── file1.txt
-│   └── file2.txt
-└── sibling2
-```
+The name might suggest that this somehow only works in unix or something but it's for a different reason. This package was born out of my discontent with `win32` path conventions. In `win32` paths use `\` or `\\` instead of `/`. This package aims to read your input (whether it's a `win32` path or `unix` path) and output `unix` style paths.
 
-You can then import `tree` which works in the following way:
+## Recursive option
 
-```ts
-import { tree } from "tree-directory";
+Setting `{ recursive : true }` when calling `unixreaddir` will generate a tree structure of the directory you are trying to access.
 
-tree("parents").then((data) => console.dir(data, { depth: null }));
+## Usage:
 
-/*
-
-[
-  [
-    [
-      { basename: 'sibling0', dirname: '.', isFile: false },
-      { basename: 'subdir', dirname: 'sibling0', isFile: false }
-    ],
-    [
-      { basename: 'file1.txt', dirname: 'sibling0', isFile: true },
-      {
-        basename: 'file1.txt',
-        dirname: 'sibling0/subdir',
-        isFile: true
-      },
-      {
-        basename: 'file2.txt',
-        dirname: 'sibling0/subdir',
-        isFile: true
-      }
-    ]
-  ],
-  [
-    [ { basename: 'sibling1', dirname: '.', isFile: false } ],
-    [
-      { basename: 'file1.txt', dirname: 'sibling1', isFile: true },
-      { basename: 'file2.txt', dirname: 'sibling1', isFile: true }
-    ]
-  ],
-  [ [ { basename: 'sibling2', dirname: '.', isFile: false } ], [] ]
-]
-
-*/
-```
-
-## This is is still quite primitive
-
-This won't be helpful if your paths are complicated. I am working on that currently. Example:
+For these examples the directory structure looks like this:
 
 ```bash
+$ tree parent
 parent/
 ├── sibling0
 │   ├── a
@@ -87,24 +38,142 @@ parent/
 └── sibling2
 ```
 
-This ruins depending on the sorted nature of the arrays and you can no longer assume that any directory chain is valid. Really, if you have more than one subdirectory everything goes out of controll but this is just barely the start and mainly experimenting with how to publish npm packages, dealing with technicalities, etc.
+### Example 1. Basic `readdir` no options
 
-## Exports
+```ts
+import { unixreaddir } from "directoree";
 
-### `unixreaddir(parent: string)`
+unixreaddir("parent").then((result) => {
+  console.dir(result, { depth: null });
+});
+/*
+[ 'sibling0', 'sibling1', 'sibling2' ]
+*/
+```
 
-This is an `async` function that resolves with `string[]`. It takes the parent directory as an argument and recurrsively reads it. It makes use of the `{ recursive : true }` option in the [`readdir`](https://nodejs.org/api/fs.html#fspromisesreaddirpath-options).
+### Example 2. `{ withFileTypes : true }`
 
-This function makes use of the `normalize` function from native node module `path/posix` and a simple `regex` line to replace `win32` type paths into `unix` style paths with single slashes for each subdir.
+```ts
+import { unixreaddir } from "directoree";
 
-### `dirdata(parent: string, paths: string[])`
+unixreaddir("parent", { withFileTypes: true }).then((result) => {
+  console.dir(result, { depth: null });
+});
+/*
+[
+  Dirent { name: 'sibling0', path: 'parent', [Symbol(type)]: 2 },
+  Dirent { name: 'sibling1', path: 'parent', [Symbol(type)]: 2 },
+  Dirent { name: 'sibling2', path: 'parent', [Symbol(type)]: 2 }
+]
+*/
+```
 
-This is also an `async` function used internally to generate the tree-like structure.
+Check [Dirent](https://nodejs.org/api/fs.html#class-fsdirent) for more details.
 
-### `group(pathData: IPathData[], paths: string[])`
+### Example 3. `{ recursive : true }`
 
-Yet another `async` function that takes the resolved promises from `dirdata` and `unixreaddir` respectively.
+```ts
+import { unixreaddir } from "directoree";
 
-### `tree(parent: string)`
+unixreaddir("parent", { recursive: true }).then((tree) => {
+  console.dir(tree, { depth: null });
+});
 
-This function combines it all and generates the tree-like structure. Also `async` and resolves with an array of the data.
+/*
+TreeNode {
+  name: 'parent',
+  path: '.',
+  isFile: false,
+  children: [
+    TreeNode {
+      name: 'sibling0',
+      path: 'parent',
+      isFile: false,
+      children: [
+        TreeNode {
+          name: 'a',
+          path: 'parent/sibling0',
+          isFile: false,
+          children: [
+            TreeNode {
+              name: 'b',
+              path: 'parent/sibling0/a',
+              isFile: false,
+              children: [
+                TreeNode {
+                  name: 'c',
+                  path: 'parent/sibling0/a/b',
+                  isFile: false,
+                  children: [
+                    TreeNode {
+                      name: 'd.txt',
+                      path: 'parent/sibling0/a/b/c',
+                      isFile: true,
+                      children: undefined
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        TreeNode {
+          name: 'file1.txt',
+          path: 'parent/sibling0',
+          isFile: true,
+          children: undefined
+        },
+        TreeNode {
+          name: 'subdir',
+          path: 'parent/sibling0',
+          isFile: false,
+          children: [
+            TreeNode {
+              name: 'file1.txt',
+              path: 'parent/sibling0/subdir',
+              isFile: true,
+              children: undefined
+            },
+            TreeNode {
+              name: 'file2.txt',
+              path: 'parent/sibling0/subdir',
+              isFile: true,
+              children: undefined
+            }
+          ]
+        }
+      ]
+    },
+    TreeNode {
+      name: 'sibling1',
+      path: 'parent',
+      isFile: false,
+      children: [
+        TreeNode {
+          name: 'file1.txt',
+          path: 'parent/sibling1',
+          isFile: true,
+          children: undefined
+        },
+        TreeNode {
+          name: 'file2.txt',
+          path: 'parent/sibling1',
+          isFile: true,
+          children: undefined
+        }
+      ]
+    },
+    TreeNode {
+      name: 'sibling2',
+      path: 'parent',
+      isFile: false,
+      children: []
+    }
+  ]
+}
+*/
+```
+
+## Documentation:
+
+You can check [the docs](https://bosari-a.github.io/tree-directory/) for more details.

@@ -92,7 +92,9 @@ export async function unixreaddir(
     }
   });
   /**
-   * Recursively generates tree
+   * Recursively generates tree.
+   *
+   * This function is nested just for the sake of isolating state.
    * @param node
    * @returns
    */
