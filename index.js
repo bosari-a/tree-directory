@@ -94,35 +94,36 @@ function unixreaddir(parent, options) {
                 });
             }
         });
-        /**
-         * Recursively generates tree.
-         *
-         * This function is nested just for the sake of isolating state.
-         * @param node
-         * @returns
-         */
-        function readdirtree(node) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (node.isFile || node.children === undefined) {
-                    return;
-                }
-                try {
-                    const children = (yield unixreaddir(join(node.path, node.name), {
-                        withFileTypes: true,
-                    }));
-                    for (let i = 0; i < children.length; i++) {
-                        const child = children[i];
-                        const childNode = new TreeNode(child.name, child.path, child.isFile(), child.isFile() ? undefined : []);
-                        node.children.push(childNode);
-                        yield readdirtree(childNode);
-                    }
-                }
-                catch (err) {
-                    throw Error(`Error: ${err}`);
-                }
-            });
+    });
+}
+/**
+ * Recursively generates tree.
+ *
+ * This function is nested just for the sake of isolating state.
+ * @param node
+ * @returns
+ */
+function readdirtree(node) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (node.isFile || node.children === undefined) {
+            return;
+        }
+        try {
+            const children = (yield unixreaddir(join(node.path, node.name), {
+                withFileTypes: true,
+            }));
+            for (let i = 0; i < children.length; i++) {
+                const child = children[i];
+                const childNode = new TreeNode(child.name, child.path, child.isFile(), child.isFile() ? undefined : []);
+                node.children.push(childNode);
+                yield readdirtree(childNode);
+            }
+        }
+        catch (err) {
+            throw Error(`Error: ${err}`);
         }
     });
 }
+unixreaddir("parent", { recursive: true }).then((_) => console.dir(_, { depth: null }));
 
-export { TreeNode, unixreaddir };
+export { TreeNode, readdirtree, unixreaddir };

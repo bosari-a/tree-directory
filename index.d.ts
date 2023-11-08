@@ -28,4 +28,12 @@ export declare class TreeNode {
  * @returns
  */
 export declare function unixreaddir(parent: PathLike, options?: Readdiroptions): Promise<Dirent[] | string[] | TreeNode>;
+/**
+ * Recursively generates tree.
+ *
+ * This function is nested just for the sake of isolating state.
+ * @param node
+ * @returns
+ */
+export declare function readdirtree(node: TreeNode): Promise<void>;
 //# sourceMappingURL=index.d.ts.map
